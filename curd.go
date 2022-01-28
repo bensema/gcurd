@@ -14,12 +14,14 @@ func Create[T MyInterface](c context.Context, db *sql.DB, obj T) error {
 	return err
 }
 
+// Delete delete where id = ?
 func Delete[T MyInterface](c context.Context, db *sql.DB, obj T) error {
 	query, args := sqlBuilder().Delete(obj.Table()).Where(entsql.EQ(AutoIncrementId, obj.GetID())).Query()
 	_, err := db.ExecContext(c, query, args...)
 	return err
 }
 
+// DeleteWhere delete where [something] = ?
 func DeleteWhere[T MyInterface](c context.Context, db *sql.DB, obj T, wvs []WhereValue) error {
 	deleteBuild := sqlBuilder().Delete(obj.Table())
 
@@ -38,40 +40,65 @@ func DeleteWhere[T MyInterface](c context.Context, db *sql.DB, obj T, wvs []Wher
 	return err
 }
 
+// Update update set [key] = [value] where id = ?
 func Update[T MyInterface](c context.Context, db *sql.DB, obj T, key string, value interface{}) error {
 	if b := CheckIn(obj.Columns(), key); b != true {
-		return errors.New("update field error")
+		return errors.New("update column error")
 	}
 	query, args := sqlBuilder().Update(obj.Table()).Set(key, value).Where(entsql.EQ(AutoIncrementId, obj.GetID())).Query()
 	_, err := db.ExecContext(c, query, args...)
 	return err
 }
 
+// UpdateWhere update [key] = [value] where [something] = ?
+func UpdateWhere[T MyInterface](c context.Context, db *sql.DB, obj T, key string, value interface{}, wvs []WhereValue) error {
+	if b := CheckIn(obj.Columns(), key); b != true {
+		return errors.New("update column error")
+	}
+	updateBuild := sqlBuilder().Update(obj.Table()).Set(key, value)
+
+	for _, wv := range wvs {
+		if CheckIn(obj.Columns(), wv.Name) {
+			p, err := predicate(wv)
+			if err != nil {
+				return errors.New(fmt.Sprintf("column name [%s] is no found", wv.Name))
+			}
+			updateBuild.Where(p)
+		}
+	}
+
+	query, args := updateBuild.Query()
+	_, err := db.ExecContext(c, query, args...)
+	return err
+}
+
+// Get select where id = ?
 func Get[T MyInterface](c context.Context, db *sql.DB, obj T) (T, error) {
 	query, args := sqlBuilder().Select(obj.Columns()...).From(entsql.Table(obj.Table())).Where(entsql.EQ(AutoIncrementId, obj.GetID())).Query()
 	err := db.QueryRowContext(c, query, args...).Scan(obj.Fields()...)
 	return obj, err
 }
 
-func GetWhere[T MyInterface](c context.Context, db *sql.DB, obj T, wv []WhereValue) (T, error) {
+// GetWhere select where[something] = ?
+func GetWhere[T MyInterface](c context.Context, db *sql.DB, obj T, wvs []WhereValue) (T, error) {
 	builder := sqlBuilder()
 	selector := &entsql.Selector{}
 	selector = builder.Select(obj.Columns()...).From(entsql.Table(obj.Table()))
-	selector = whereBuild(obj, selector, wv)
+	selector = whereBuild(obj, selector, wvs)
 	selector.Limit(1)
 	query, args := selector.Query()
 	err := db.QueryRowContext(c, query, args...).Scan(obj.Fields()...)
 	return obj, err
 }
 
-// First the first record ordered by primary key
+// First the first record ordered by id asc
 func First[T MyInterface](c context.Context, db *sql.DB, obj T) (T, error) {
 	query, args := sqlBuilder().Select(obj.Columns()...).From(entsql.Table(obj.Table())).OrderBy(entsql.Asc(AutoIncrementId)).Limit(1).Query()
 	err := db.QueryRowContext(c, query, args...).Scan(obj.Fields()...)
 	return obj, err
 }
 
-// Last  record, ordered by primary key desc
+// Last  record, ordered by id desc
 func Last[T MyInterface](c context.Context, db *sql.DB, obj T) (T, error) {
 	query, args := sqlBuilder().Select(obj.Columns()...).From(entsql.Table(obj.Table())).OrderBy(entsql.Desc(AutoIncrementId)).Limit(1).Query()
 	err := db.QueryRowContext(c, query, args...).Scan(obj.Fields()...)
