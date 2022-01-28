@@ -1,6 +1,6 @@
 package gcurd
 
-func checkIn(dis []string, k string) bool {
+func CheckIn[T comparable](dis []T, k T) bool {
 	for i, _ := range dis {
 		if dis[i] == k {
 			return true

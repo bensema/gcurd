@@ -6,7 +6,7 @@ import (
 
 func whereBuild[T MyInterface](obj T, selector *entsql.Selector, wvs []WhereValue) *entsql.Selector {
 	for _, wv := range wvs {
-		if checkIn(obj.Columns(), wv.Name) {
+		if CheckIn(obj.Columns(), wv.Name) {
 			switch wv.Op {
 			case OpEQ:
 				selector = selector.Where(entsql.EQ(wv.Name, wv.Value))
@@ -25,7 +25,7 @@ func whereBuild[T MyInterface](obj T, selector *entsql.Selector, wvs []WhereValu
 			case OpNotIn:
 				selector = selector.Where(entsql.NotIn(wv.Name, wv.Value))
 			case OpLike:
-				//
+				// todo
 			case OpIsNull:
 				selector = selector.Where(entsql.IsNull(wv.Name))
 			case OpNotNull:
@@ -35,4 +35,45 @@ func whereBuild[T MyInterface](obj T, selector *entsql.Selector, wvs []WhereValu
 		}
 	}
 	return selector
+}
+
+func buildFind[T MyInterface](obj T, req *Request, findType FindType) (string, []interface{}) {
+	builder := sqlBuilder()
+	selector := &entsql.Selector{}
+	switch findType {
+	case SqlPageList, SqlFind:
+		selector = builder.Select(obj.Columns()...)
+	case SqlPageCount:
+		selector = builder.Select("Count(*)")
+	}
+
+	selector = selector.From(entsql.Table(obj.Table()))
+
+	selector = whereBuild(obj, selector, req.Where)
+
+	// count 返回
+	if findType == SqlPageCount {
+		return selector.Query()
+	}
+
+	if findType == SqlFind {
+		return selector.Query()
+	}
+
+	if CheckIn(obj.Columns(), req.OrderBy.Filed) {
+		orderBy := ""
+		switch req.OrderBy.Direction {
+		case "desc", "DESC":
+			orderBy = entsql.Desc(req.OrderBy.Filed)
+		case "asc", "ASC":
+			orderBy = entsql.Asc(req.OrderBy.Filed)
+		default:
+			orderBy = entsql.Asc(req.OrderBy.Filed)
+		}
+		selector = selector.OrderBy(orderBy)
+	}
+
+	selector.Offset((req.Pagination.Num - 1) * req.Pagination.Size)
+	selector.Limit(req.Pagination.Size)
+	return selector.Query()
 }

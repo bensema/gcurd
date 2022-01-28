@@ -1,10 +1,5 @@
 package gcurd
 
-import (
-	"entgo.io/ent/dialect"
-	entsql "entgo.io/ent/dialect/sql"
-)
-
 type Op int
 
 const (
@@ -56,6 +51,4 @@ const (
 	SqlFind
 )
 
-func sqlBuilder() *entsql.DialectBuilder {
-	return entsql.Dialect(dialect.MySQL)
-}
+const AutoIncrementId = "id"
