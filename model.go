@@ -1,6 +1,6 @@
 package gcurd
 
-type MyInterface interface {
+type Model interface {
 	SetID(id int)
 	GetID() int
 	Table() string

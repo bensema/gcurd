@@ -5,7 +5,7 @@ import (
 	"errors"
 )
 
-func whereBuild[T MyInterface](obj T, selector *entsql.Selector, wvs []WhereValue) *entsql.Selector {
+func whereBuild[T Model](obj T, selector *entsql.Selector, wvs []WhereValue) *entsql.Selector {
 	for _, wv := range wvs {
 		if CheckIn(obj.Columns(), wv.Name) {
 			switch wv.Op {
@@ -38,7 +38,7 @@ func whereBuild[T MyInterface](obj T, selector *entsql.Selector, wvs []WhereValu
 	return selector
 }
 
-func buildFind[T MyInterface](obj T, req *Request, findType FindType) (string, []interface{}) {
+func buildFind[T Model](obj T, req *Request, findType FindType) (string, []interface{}) {
 	builder := sqlBuilder()
 	selector := &entsql.Selector{}
 	switch findType {
