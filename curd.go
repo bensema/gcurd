@@ -15,7 +15,8 @@ func Create[T MyInterface](c context.Context, db *sql.DB, obj T) error {
 }
 
 // Delete delete where id = ?
-func Delete[T MyInterface](c context.Context, db *sql.DB, obj T) error {
+func Delete[T MyInterface](c context.Context, db *sql.DB, obj T, id int) error {
+	obj.SetID(id)
 	query, args := sqlBuilder().Delete(obj.Table()).Where(entsql.EQ(AutoIncrementId, obj.GetID())).Query()
 	_, err := db.ExecContext(c, query, args...)
 	return err
@@ -41,7 +42,8 @@ func DeleteWhere[T MyInterface](c context.Context, db *sql.DB, obj T, wvs []Wher
 }
 
 // Update update set [key] = [value] where id = ?
-func Update[T MyInterface](c context.Context, db *sql.DB, obj T, key string, value interface{}) error {
+func Update[T MyInterface](c context.Context, db *sql.DB, obj T, id int, key string, value interface{}) error {
+	obj.SetID(id)
 	if b := CheckIn(obj.Columns(), key); b != true {
 		return errors.New("update column error")
 	}
@@ -73,7 +75,8 @@ func UpdateWhere[T MyInterface](c context.Context, db *sql.DB, obj T, key string
 }
 
 // Get select where id = ?
-func Get[T MyInterface](c context.Context, db *sql.DB, obj T) (T, error) {
+func Get[T MyInterface](c context.Context, db *sql.DB, obj T, id int) (T, error) {
+	obj.SetID(id)
 	query, args := sqlBuilder().Select(obj.Columns()...).From(entsql.Table(obj.Table())).Where(entsql.EQ(AutoIncrementId, obj.GetID())).Query()
 	err := db.QueryRowContext(c, query, args...).Scan(obj.Fields()...)
 	return obj, err
