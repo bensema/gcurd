@@ -1,4 +1,4 @@
-module gcurd
+module github.com/bensema/gcurd
 
 go 1.18
 

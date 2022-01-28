@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	entsql "entgo.io/ent/dialect/sql"
 	"errors"
+	"fmt"
 )
 
 func Create[T MyInterface](c context.Context, db *sql.DB, obj T) error {
@@ -15,6 +16,24 @@ func Create[T MyInterface](c context.Context, db *sql.DB, obj T) error {
 
 func Delete[T MyInterface](c context.Context, db *sql.DB, obj T) error {
 	query, args := sqlBuilder().Delete(obj.Table()).Where(entsql.EQ(AutoIncrementId, obj.GetID())).Query()
+	_, err := db.ExecContext(c, query, args...)
+	return err
+}
+
+func DeleteWhere[T MyInterface](c context.Context, db *sql.DB, obj T, wvs []WhereValue) error {
+	deleteBuild := sqlBuilder().Delete(obj.Table())
+
+	for _, wv := range wvs {
+		if CheckIn(obj.Columns(), wv.Name) {
+			p, err := predicate(wv)
+			if err != nil {
+				return errors.New(fmt.Sprintf("column name [%s] is no found", wv.Name))
+			}
+			deleteBuild.Where(p)
+		}
+	}
+
+	query, args := deleteBuild.Query()
 	_, err := db.ExecContext(c, query, args...)
 	return err
 }
@@ -30,6 +49,17 @@ func Update[T MyInterface](c context.Context, db *sql.DB, obj T, key string, val
 
 func Get[T MyInterface](c context.Context, db *sql.DB, obj T) (T, error) {
 	query, args := sqlBuilder().Select(obj.Columns()...).From(entsql.Table(obj.Table())).Where(entsql.EQ(AutoIncrementId, obj.GetID())).Query()
+	err := db.QueryRowContext(c, query, args...).Scan(obj.Fields()...)
+	return obj, err
+}
+
+func GetWhere[T MyInterface](c context.Context, db *sql.DB, obj T, wv []WhereValue) (T, error) {
+	builder := sqlBuilder()
+	selector := &entsql.Selector{}
+	selector = builder.Select(obj.Columns()...).From(entsql.Table(obj.Table()))
+	selector = whereBuild(obj, selector, wv)
+	selector.Limit(1)
+	query, args := selector.Query()
 	err := db.QueryRowContext(c, query, args...).Scan(obj.Fields()...)
 	return obj, err
 }

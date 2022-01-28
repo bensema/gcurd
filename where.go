@@ -2,6 +2,7 @@ package gcurd
 
 import (
 	entsql "entgo.io/ent/dialect/sql"
+	"errors"
 )
 
 func whereBuild[T MyInterface](obj T, selector *entsql.Selector, wvs []WhereValue) *entsql.Selector {
@@ -76,4 +77,37 @@ func buildFind[T MyInterface](obj T, req *Request, findType FindType) (string, [
 	selector.Offset((req.Pagination.Num - 1) * req.Pagination.Size)
 	selector.Limit(req.Pagination.Size)
 	return selector.Query()
+}
+
+func predicate(wv WhereValue) (*entsql.Predicate, error) {
+	var p *entsql.Predicate
+	var err error
+	switch wv.Op {
+	case OpEQ:
+		p = entsql.EQ(wv.Name, wv.Value)
+	case OpNEQ:
+		p = entsql.NEQ(wv.Name, wv.Value)
+	case OpGT:
+		p = entsql.GT(wv.Name, wv.Value)
+	case OpGTE:
+		p = entsql.GTE(wv.Name, wv.Value)
+	case OpLT:
+		p = entsql.LT(wv.Name, wv.Value)
+	case OpLTE:
+		p = entsql.LTE(wv.Name, wv.Value)
+	case OpIn:
+		p = entsql.In(wv.Name, wv.Value)
+	case OpNotIn:
+		p = entsql.NotIn(wv.Name, wv.Value)
+	case OpLike:
+		// todo
+		err = errors.New("todo like")
+	case OpIsNull:
+		p = entsql.IsNull(wv.Name)
+	case OpNotNull:
+		p = entsql.NotNull(wv.Name)
+	default:
+		err = errors.New("no found")
+	}
+	return p, err
 }
