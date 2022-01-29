@@ -25,7 +25,7 @@ type (
 	}
 
 	Request struct {
-		Where      []WhereValue
+		Where      []*WhereValue
 		OrderBy    OrderBy
 		Pagination Pagination
 	}

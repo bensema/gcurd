@@ -22,7 +22,7 @@ func Delete[T Model](c context.Context, db *sql.DB, obj T, id int) error {
 }
 
 // DeleteWhere delete where [something] = ?
-func DeleteWhere[T Model](c context.Context, db *sql.DB, obj T, wvs []WhereValue) error {
+func DeleteWhere[T Model](c context.Context, db *sql.DB, obj T, wvs []*WhereValue) error {
 	deleteBuild := sqlBuilder().Delete(obj.Table())
 
 	for _, wv := range wvs {
@@ -52,7 +52,7 @@ func Update[T Model](c context.Context, db *sql.DB, obj T, id int, key string, v
 }
 
 // UpdateWhere update [key] = [value] where [something] = ?
-func UpdateWhere[T Model](c context.Context, db *sql.DB, obj T, key string, value interface{}, wvs []WhereValue) error {
+func UpdateWhere[T Model](c context.Context, db *sql.DB, obj T, key string, value interface{}, wvs []*WhereValue) error {
 	if b := CheckIn(obj.Columns(), key); b != true {
 		return errors.New("update column error")
 	}
@@ -74,7 +74,7 @@ func UpdateWhere[T Model](c context.Context, db *sql.DB, obj T, key string, valu
 }
 
 // UpdateWhereKV update [key] = [value], [key] = [value],... where [something] = ?
-func UpdateWhereKV[T Model](c context.Context, db *sql.DB, obj T, kvs []KeyValue, wvs []WhereValue) error {
+func UpdateWhereKV[T Model](c context.Context, db *sql.DB, obj T, kvs []KeyValue, wvs []*WhereValue) error {
 
 	updateBuild := sqlBuilder().Update(obj.Table())
 	for _, kv := range kvs {
@@ -107,7 +107,7 @@ func Get[T Model](c context.Context, db *sql.DB, obj T, id int) (T, error) {
 }
 
 // GetWhere select where[something] = ?
-func GetWhere[T Model](c context.Context, db *sql.DB, obj T, wvs []WhereValue) (T, error) {
+func GetWhere[T Model](c context.Context, db *sql.DB, obj T, wvs []*WhereValue) (T, error) {
 	builder := sqlBuilder()
 	selector := &entsql.Selector{}
 	selector = builder.Select(obj.Columns()...).From(entsql.Table(obj.Table()))

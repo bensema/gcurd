@@ -5,7 +5,7 @@ import (
 	"errors"
 )
 
-func whereBuild[T Model](obj T, selector *entsql.Selector, wvs []WhereValue) *entsql.Selector {
+func whereBuild[T Model](obj T, selector *entsql.Selector, wvs []*WhereValue) *entsql.Selector {
 	for _, wv := range wvs {
 		if CheckIn(obj.Columns(), wv.Name) {
 			switch wv.Op {
@@ -79,7 +79,7 @@ func buildFind[T Model](obj T, req *Request, findType FindType) (string, []inter
 	return selector.Query()
 }
 
-func predicate(wv WhereValue) (*entsql.Predicate, error) {
+func predicate(wv *WhereValue) (*entsql.Predicate, error) {
 	var p *entsql.Predicate
 	var err error
 	switch wv.Op {
@@ -110,4 +110,13 @@ func predicate(wv WhereValue) (*entsql.Predicate, error) {
 		err = errors.New("no found")
 	}
 	return p, err
+}
+
+// EQ
+func EQ(col string, value interface{}) *WhereValue {
+	return &WhereValue{
+		Name:  col,
+		Op:    OpEQ,
+		Value: value,
+	}
 }
