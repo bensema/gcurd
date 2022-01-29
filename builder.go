@@ -112,11 +112,74 @@ func predicate(wv *WhereValue) (*entsql.Predicate, error) {
 	return p, err
 }
 
-// EQ
+// EQ returns a "="
 func EQ(col string, value interface{}) *WhereValue {
 	return &WhereValue{
 		Name:  col,
 		Op:    OpEQ,
+		Value: value,
+	}
+}
+
+// NEQ returns a "<>"
+func NEQ(col string, value interface{}) *WhereValue {
+	return &WhereValue{
+		Name:  col,
+		Op:    OpNEQ,
+		Value: value,
+	}
+}
+
+// GT returns a ">"
+func GT(col string, value interface{}) *WhereValue {
+	return &WhereValue{
+		Name:  col,
+		Op:    OpGT,
+		Value: value,
+	}
+}
+
+// GTE returns a ">="
+func GTE(col string, value interface{}) *WhereValue {
+	return &WhereValue{
+		Name:  col,
+		Op:    OpGTE,
+		Value: value,
+	}
+}
+
+// LT returns a "<"
+func LT(col string, value interface{}) *WhereValue {
+	return &WhereValue{
+		Name:  col,
+		Op:    OpLT,
+		Value: value,
+	}
+}
+
+// LTE returns a "<="
+func LTE(col string, value interface{}) *WhereValue {
+	return &WhereValue{
+		Name:  col,
+		Op:    OpLTE,
+		Value: value,
+	}
+}
+
+// IN returns a "IN"
+func IN(col string, value interface{}) *WhereValue {
+	return &WhereValue{
+		Name:  col,
+		Op:    OpIn,
+		Value: value,
+	}
+}
+
+// NotIn returns a "NOT IN"
+func NotIn(col string, value interface{}) *WhereValue {
+	return &WhereValue{
+		Name:  col,
+		Op:    OpNotIn,
 		Value: value,
 	}
 }
