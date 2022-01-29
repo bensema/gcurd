@@ -9,6 +9,11 @@ type (
 		Value interface{} `json:"value"`
 	}
 
+	KeyValue struct {
+		Key   string
+		Value interface{}
+	}
+
 	OrderBy struct {
 		Direction string `json:"direction"`
 		Filed     string `json:"filed"`

@@ -73,6 +73,31 @@ func UpdateWhere[T Model](c context.Context, db *sql.DB, obj T, key string, valu
 	return err
 }
 
+// UpdateWhereKV update [key] = [value], [key] = [value],... where [something] = ?
+func UpdateWhereKV[T Model](c context.Context, db *sql.DB, obj T, kvs []KeyValue, wvs []WhereValue) error {
+
+	updateBuild := sqlBuilder().Update(obj.Table())
+	for _, kv := range kvs {
+		if b := CheckIn(obj.Columns(), kv.Key); b != true {
+			return errors.New("update column error")
+		}
+		updateBuild = updateBuild.Set(kv.Key, kv.Value)
+	}
+	for _, wv := range wvs {
+		if CheckIn(obj.Columns(), wv.Name) {
+			p, err := predicate(wv)
+			if err != nil {
+				return errors.New(fmt.Sprintf("column name [%s] is no found", wv.Name))
+			}
+			updateBuild.Where(p)
+		}
+	}
+
+	query, args := updateBuild.Query()
+	_, err := db.ExecContext(c, query, args...)
+	return err
+}
+
 // Get select where id = ?
 func Get[T Model](c context.Context, db *sql.DB, obj T, id int) (T, error) {
 	obj.SetID(id)
