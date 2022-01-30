@@ -132,8 +132,11 @@ func Last[T Model](c context.Context, db *sql.DB, obj T) (T, error) {
 	return obj, err
 }
 
-func Find[T Model](c context.Context, db *sql.DB, obj T, req *Request, f func() T) (objs []T, err error) {
+func Find[T Model](c context.Context, db *sql.DB, obj T, wvs []*WhereValue, f func() T) (objs []T, err error) {
 	objs = []T{}
+	req := &Request{
+		Where: wvs,
+	}
 	query, args := buildFind(obj, req, SqlFind)
 	rows, err := db.QueryContext(c, query, args...)
 	if err != nil {

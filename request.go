@@ -10,8 +10,8 @@ type (
 	}
 
 	KeyValue struct {
-		Key   string
-		Value interface{}
+		Key   string      `json:"key"`
+		Value interface{} `json:"value"`
 	}
 
 	OrderBy struct {
