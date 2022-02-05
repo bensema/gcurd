@@ -8,21 +8,22 @@ import (
 	"fmt"
 )
 
-func Create[T Model](c context.Context, db *sql.DB, obj T) (sql.Result, error) {
+// CreateTx
+func CreateTx[T Model](c context.Context, db *sql.Tx, obj T) (sql.Result, error) {
 	query, args := sqlBuilder().Insert(obj.Table()).Columns(obj.Columns()[1:]...).Values(obj.Fields()[1:]...).Query()
 	return db.ExecContext(c, query, args...)
 }
 
-// Delete delete where id = ?
-func Delete[T Model](c context.Context, db *sql.DB, obj T, id int) error {
+// DeleteTx delete where id = ?
+func DeleteTx[T Model](c context.Context, db *sql.Tx, obj T, id int) error {
 	obj.SetID(id)
 	query, args := sqlBuilder().Delete(obj.Table()).Where(entsql.EQ(AutoIncrementId, obj.GetID())).Query()
 	_, err := db.ExecContext(c, query, args...)
 	return err
 }
 
-// DeleteWhere delete where [something] = ?
-func DeleteWhere[T Model](c context.Context, db *sql.DB, obj T, wvs []*WhereValue) error {
+// DeleteWhereTx delete where [something] = ?
+func DeleteWhereTx[T Model](c context.Context, db *sql.Tx, obj T, wvs []*WhereValue) error {
 	deleteBuild := sqlBuilder().Delete(obj.Table())
 
 	for _, wv := range wvs {
@@ -40,8 +41,8 @@ func DeleteWhere[T Model](c context.Context, db *sql.DB, obj T, wvs []*WhereValu
 	return err
 }
 
-// Update update set [key] = [value] where id = ?
-func Update[T Model](c context.Context, db *sql.DB, obj T, id int, key string, value interface{}) error {
+// UpdateTx update set [key] = [value] where id = ?
+func UpdateTx[T Model](c context.Context, db *sql.Tx, obj T, id int, key string, value interface{}) error {
 	obj.SetID(id)
 	if b := CheckIn(obj.Columns(), key); b != true {
 		return errors.New("update column error")
@@ -51,8 +52,8 @@ func Update[T Model](c context.Context, db *sql.DB, obj T, id int, key string, v
 	return err
 }
 
-// UpdateWhere update [key] = [value] where [something] = ?
-func UpdateWhere[T Model](c context.Context, db *sql.DB, obj T, key string, value interface{}, wvs []*WhereValue) error {
+// UpdateWhereTx update [key] = [value] where [something] = ?
+func UpdateWhereTx[T Model](c context.Context, db *sql.Tx, obj T, key string, value interface{}, wvs []*WhereValue) error {
 	if b := CheckIn(obj.Columns(), key); b != true {
 		return errors.New("update column error")
 	}
@@ -73,8 +74,8 @@ func UpdateWhere[T Model](c context.Context, db *sql.DB, obj T, key string, valu
 	return err
 }
 
-// UpdateWhereKV update [key] = [value], [key] = [value],... where [something] = ?
-func UpdateWhereKV[T Model](c context.Context, db *sql.DB, obj T, kvs []KeyValue, wvs []*WhereValue) error {
+// UpdateWhereKVTx update [key] = [value], [key] = [value],... where [something] = ?
+func UpdateWhereKVTx[T Model](c context.Context, db *sql.Tx, obj T, kvs []KeyValue, wvs []*WhereValue) error {
 
 	updateBuild := sqlBuilder().Update(obj.Table())
 	for _, kv := range kvs {
@@ -98,16 +99,16 @@ func UpdateWhereKV[T Model](c context.Context, db *sql.DB, obj T, kvs []KeyValue
 	return err
 }
 
-// Get select where id = ?
-func Get[T Model](c context.Context, db *sql.DB, obj T, id int) (T, error) {
+// GetTx select where id = ?
+func GetTx[T Model](c context.Context, db *sql.Tx, obj T, id int) (T, error) {
 	obj.SetID(id)
 	query, args := sqlBuilder().Select(obj.Columns()...).From(entsql.Table(obj.Table())).Where(entsql.EQ(AutoIncrementId, obj.GetID())).Query()
 	err := db.QueryRowContext(c, query, args...).Scan(obj.Fields()...)
 	return obj, err
 }
 
-// GetWhere select where[something] = ?
-func GetWhere[T Model](c context.Context, db *sql.DB, obj T, wvs []*WhereValue) (T, error) {
+// GetWhereTx select where[something] = ?
+func GetWhereTx[T Model](c context.Context, db *sql.Tx, obj T, wvs []*WhereValue) (T, error) {
 	builder := sqlBuilder()
 	selector := &entsql.Selector{}
 	selector = builder.Select(obj.Columns()...).From(entsql.Table(obj.Table()))
@@ -118,21 +119,7 @@ func GetWhere[T Model](c context.Context, db *sql.DB, obj T, wvs []*WhereValue) 
 	return obj, err
 }
 
-// First the first record ordered by id asc
-func First[T Model](c context.Context, db *sql.DB, obj T) (T, error) {
-	query, args := sqlBuilder().Select(obj.Columns()...).From(entsql.Table(obj.Table())).OrderBy(entsql.Asc(AutoIncrementId)).Limit(1).Query()
-	err := db.QueryRowContext(c, query, args...).Scan(obj.Fields()...)
-	return obj, err
-}
-
-// Last  record, ordered by id desc
-func Last[T Model](c context.Context, db *sql.DB, obj T) (T, error) {
-	query, args := sqlBuilder().Select(obj.Columns()...).From(entsql.Table(obj.Table())).OrderBy(entsql.Desc(AutoIncrementId)).Limit(1).Query()
-	err := db.QueryRowContext(c, query, args...).Scan(obj.Fields()...)
-	return obj, err
-}
-
-func Find[T Model](c context.Context, db *sql.DB, obj T, wvs []*WhereValue, f func() T) (objs []T, err error) {
+func FindTx[T Model](c context.Context, db *sql.Tx, obj T, wvs []*WhereValue, f func() T) (objs []T, err error) {
 	objs = []T{}
 	req := &Request{
 		Where: wvs,
@@ -155,7 +142,7 @@ func Find[T Model](c context.Context, db *sql.DB, obj T, wvs []*WhereValue, f fu
 	return
 }
 
-func PageFind[T Model](c context.Context, db *sql.DB, obj T, req *Request, f func() T) (objs []T, err error) {
+func PageFindTx[T Model](c context.Context, db *sql.Tx, obj T, req *Request, f func() T) (objs []T, err error) {
 	objs = []T{}
 	query, args := buildFind(obj, req, SqlPageList)
 	rows, err := db.QueryContext(c, query, args...)
@@ -175,7 +162,7 @@ func PageFind[T Model](c context.Context, db *sql.DB, obj T, req *Request, f fun
 	return
 }
 
-func PageTotal[T Model](c context.Context, db *sql.DB, obj T, req *Request) (total int, err error) {
+func PageTotalTx[T Model](c context.Context, db *sql.Tx, obj T, req *Request) (total int, err error) {
 	total = 0
 	query, args := buildFind(obj, req, SqlPageCount)
 	err = db.QueryRowContext(c, query, args...).Scan(&total)
