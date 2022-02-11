@@ -3,42 +3,24 @@ package gcurd
 import (
 	entsql "entgo.io/ent/dialect/sql"
 	"errors"
+	"fmt"
 )
 
 func whereBuild[T Model](obj T, selector *entsql.Selector, wvs []*WhereValue) *entsql.Selector {
 	for _, wv := range wvs {
 		if CheckIn(obj.Columns(), wv.Name) {
-			switch wv.Op {
-			case OpEQ:
-				selector = selector.Where(entsql.EQ(wv.Name, wv.Value))
-			case OpNEQ:
-				selector = selector.Where(entsql.NEQ(wv.Name, wv.Value))
-			case OpGT:
-				selector = selector.Where(entsql.GT(wv.Name, wv.Value))
-			case OpGTE:
-				selector = selector.Where(entsql.GTE(wv.Name, wv.Value))
-			case OpLT:
-				selector = selector.Where(entsql.LT(wv.Name, wv.Value))
-			case OpLTE:
-				selector = selector.Where(entsql.LTE(wv.Name, wv.Value))
-			case OpIn:
-				selector = selector.Where(entsql.In(wv.Name, wv.Value))
-			case OpNotIn:
-				selector = selector.Where(entsql.NotIn(wv.Name, wv.Value))
-			case OpLike:
-				// todo
-			case OpIsNull:
-				selector = selector.Where(entsql.IsNull(wv.Name))
-			case OpNotNull:
-				selector = selector.Where(entsql.NotNull(wv.Name))
-
+			p, err := predicate(wv)
+			if err != nil {
+				fmt.Println(err)
+				continue
 			}
+			selector = selector.Where(p)
 		}
 	}
 	return selector
 }
 
-func buildFind[T Model](obj T, req *Request, findType FindType) (string, []interface{}) {
+func buildFind[T Model](obj T, req *Request, findType FindType) (string, []any) {
 	builder := sqlBuilder()
 	selector := &entsql.Selector{}
 	switch findType {
@@ -100,8 +82,7 @@ func predicate(wv *WhereValue) (*entsql.Predicate, error) {
 	case OpNotIn:
 		p = entsql.NotIn(wv.Name, wv.Value)
 	case OpLike:
-		// todo
-		err = errors.New("todo like")
+		p = entsql.Like(wv.Name, fmt.Sprint(wv.Value))
 	case OpIsNull:
 		p = entsql.IsNull(wv.Name)
 	case OpNotNull:
@@ -113,7 +94,7 @@ func predicate(wv *WhereValue) (*entsql.Predicate, error) {
 }
 
 // EQ returns a "="
-func EQ(col string, value interface{}) *WhereValue {
+func EQ(col string, value any) *WhereValue {
 	return &WhereValue{
 		Name:  col,
 		Op:    OpEQ,
@@ -122,7 +103,7 @@ func EQ(col string, value interface{}) *WhereValue {
 }
 
 // NEQ returns a "<>"
-func NEQ(col string, value interface{}) *WhereValue {
+func NEQ(col string, value any) *WhereValue {
 	return &WhereValue{
 		Name:  col,
 		Op:    OpNEQ,
@@ -131,7 +112,7 @@ func NEQ(col string, value interface{}) *WhereValue {
 }
 
 // GT returns a ">"
-func GT(col string, value interface{}) *WhereValue {
+func GT(col string, value any) *WhereValue {
 	return &WhereValue{
 		Name:  col,
 		Op:    OpGT,
@@ -140,7 +121,7 @@ func GT(col string, value interface{}) *WhereValue {
 }
 
 // GTE returns a ">="
-func GTE(col string, value interface{}) *WhereValue {
+func GTE(col string, value any) *WhereValue {
 	return &WhereValue{
 		Name:  col,
 		Op:    OpGTE,
@@ -149,7 +130,7 @@ func GTE(col string, value interface{}) *WhereValue {
 }
 
 // LT returns a "<"
-func LT(col string, value interface{}) *WhereValue {
+func LT(col string, value any) *WhereValue {
 	return &WhereValue{
 		Name:  col,
 		Op:    OpLT,
@@ -158,7 +139,7 @@ func LT(col string, value interface{}) *WhereValue {
 }
 
 // LTE returns a "<="
-func LTE(col string, value interface{}) *WhereValue {
+func LTE(col string, value any) *WhereValue {
 	return &WhereValue{
 		Name:  col,
 		Op:    OpLTE,
@@ -167,7 +148,7 @@ func LTE(col string, value interface{}) *WhereValue {
 }
 
 // IN returns a "IN"
-func IN(col string, value interface{}) *WhereValue {
+func IN(col string, value any) *WhereValue {
 	return &WhereValue{
 		Name:  col,
 		Op:    OpIn,
@@ -176,10 +157,19 @@ func IN(col string, value interface{}) *WhereValue {
 }
 
 // NotIn returns a "NOT IN"
-func NotIn(col string, value interface{}) *WhereValue {
+func NotIn(col string, value any) *WhereValue {
 	return &WhereValue{
 		Name:  col,
 		Op:    OpNotIn,
+		Value: value,
+	}
+}
+
+// Like col, pattern
+func Like(col string, value any) *WhereValue {
+	return &WhereValue{
+		Name:  col,
+		Op:    OpLike,
 		Value: value,
 	}
 }

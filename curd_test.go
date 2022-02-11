@@ -30,8 +30,8 @@ func (m *Admin) Columns() []string {
 	return []string{"id", "username", "status"}
 }
 
-func (m *Admin) Fields() []interface{} {
-	return []interface{}{&m.Id, &m.Username, &m.Status}
+func (m *Admin) Fields() []any {
+	return []any{&m.Id, &m.Username, &m.Status}
 }
 
 func (Admin) New() *Admin {

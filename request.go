@@ -4,14 +4,14 @@ import "errors"
 
 type (
 	WhereValue struct {
-		Name  string      `json:"name"`
-		Op    Op          `json:"op"`
-		Value interface{} `json:"value"`
+		Name  string `json:"name"`
+		Op    Op     `json:"op"`
+		Value any    `json:"value"`
 	}
 
 	KeyValue struct {
-		Key   string      `json:"key"`
-		Value interface{} `json:"value"`
+		Key   string `json:"key"`
+		Value any    `json:"value"`
 	}
 
 	OrderBy struct {

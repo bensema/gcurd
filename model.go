@@ -5,5 +5,5 @@ type Model interface {
 	GetID() int
 	Table() string
 	Columns() []string
-	Fields() []interface{}
+	Fields() []any
 }

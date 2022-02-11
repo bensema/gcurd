@@ -41,7 +41,7 @@ func DeleteWhere[T Model](c context.Context, db *sql.DB, obj T, wvs []*WhereValu
 }
 
 // Update update set [key] = [value] where id = ?
-func Update[T Model](c context.Context, db *sql.DB, obj T, id int, key string, value interface{}) error {
+func Update[T Model](c context.Context, db *sql.DB, obj T, id int, key string, value any) error {
 	obj.SetID(id)
 	if b := CheckIn(obj.Columns(), key); b != true {
 		return errors.New("update column error")
@@ -52,7 +52,7 @@ func Update[T Model](c context.Context, db *sql.DB, obj T, id int, key string, v
 }
 
 // UpdateWhere update [key] = [value] where [something] = ?
-func UpdateWhere[T Model](c context.Context, db *sql.DB, obj T, key string, value interface{}, wvs []*WhereValue) error {
+func UpdateWhere[T Model](c context.Context, db *sql.DB, obj T, key string, value any, wvs []*WhereValue) error {
 	if b := CheckIn(obj.Columns(), key); b != true {
 		return errors.New("update column error")
 	}
