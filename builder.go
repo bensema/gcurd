@@ -56,8 +56,8 @@ func buildFind[T Model](obj T, req *Request, findType FindType) (string, []any) 
 		selector = selector.OrderBy(orderBy)
 	}
 
-	selector.Offset((req.Pagination.Num - 1) * req.Pagination.Size)
-	selector.Limit(req.Pagination.Size)
+	selector.Offset((req.Pagination.Page - 1) * req.Pagination.PageSize)
+	selector.Limit(req.Pagination.PageSize)
 	return selector.Query()
 }
 
