@@ -32,7 +32,7 @@ type (
 )
 
 const (
-	DefaultPage     = 1
+	DefaultPage     = 0
 	DefaultPageSize = 10
 )
 
@@ -90,12 +90,12 @@ func (p *Pagination) OffsetLimit(total int) (offset int, limit int) {
 
 func (p *Pagination) Verify() error {
 	if p.Page < 0 {
-		return errors.New("num error")
+		return errors.New("page error")
 	} else if p.Page == 0 {
 		p.Page = DefaultPage
 	}
 	if p.PageSize < 0 {
-		return errors.New("size error")
+		return errors.New("page size error")
 	} else if p.PageSize == 0 {
 		p.PageSize = DefaultPageSize
 	}
