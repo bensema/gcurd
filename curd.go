@@ -10,6 +10,9 @@ import (
 
 func Create[T Model](c context.Context, db *sql.DB, obj T) (sql.Result, error) {
 	query, args := sqlBuilder().Insert(obj.Table()).Columns(obj.Columns()[1:]...).Values(obj.Fields()[1:]...).Query()
+	if Level == Debug {
+		fmt.Println("Create:", query, args)
+	}
 	return db.ExecContext(c, query, args...)
 }
 
@@ -17,6 +20,9 @@ func Create[T Model](c context.Context, db *sql.DB, obj T) (sql.Result, error) {
 func Delete[T Model](c context.Context, db *sql.DB, obj T, id int) error {
 	obj.SetID(id)
 	query, args := sqlBuilder().Delete(obj.Table()).Where(entsql.EQ(AutoIncrementId, obj.GetID())).Query()
+	if Level == Debug {
+		fmt.Println("Delete:", query, args)
+	}
 	_, err := db.ExecContext(c, query, args...)
 	return err
 }
@@ -36,6 +42,9 @@ func DeleteWhere[T Model](c context.Context, db *sql.DB, obj T, wvs []*WhereValu
 	}
 
 	query, args := deleteBuild.Query()
+	if Level == Debug {
+		fmt.Println("DeleteWhere:", query, args)
+	}
 	_, err := db.ExecContext(c, query, args...)
 	return err
 }
@@ -47,6 +56,9 @@ func Update[T Model](c context.Context, db *sql.DB, obj T, id int, key string, v
 		return errors.New("update column error")
 	}
 	query, args := sqlBuilder().Update(obj.Table()).Set(key, value).Where(entsql.EQ(AutoIncrementId, obj.GetID())).Query()
+	if Level == Debug {
+		fmt.Println("Update:", query, args)
+	}
 	_, err := db.ExecContext(c, query, args...)
 	return err
 }
@@ -69,6 +81,9 @@ func UpdateWhere[T Model](c context.Context, db *sql.DB, obj T, key string, valu
 	}
 
 	query, args := updateBuild.Query()
+	if Level == Debug {
+		fmt.Println("UpdateWhere:", query, args)
+	}
 	_, err := db.ExecContext(c, query, args...)
 	return err
 }
@@ -94,6 +109,9 @@ func UpdateWhereKV[T Model](c context.Context, db *sql.DB, obj T, kvs []KeyValue
 	}
 
 	query, args := updateBuild.Query()
+	if Level == Debug {
+		fmt.Println("UpdateWhereKV:", query, args)
+	}
 	_, err := db.ExecContext(c, query, args...)
 	return err
 }
@@ -102,6 +120,9 @@ func UpdateWhereKV[T Model](c context.Context, db *sql.DB, obj T, kvs []KeyValue
 func Get[T Model](c context.Context, db *sql.DB, obj T, id int) (T, error) {
 	obj.SetID(id)
 	query, args := sqlBuilder().Select(obj.Columns()...).From(entsql.Table(obj.Table())).Where(entsql.EQ(AutoIncrementId, obj.GetID())).Query()
+	if Level == Debug {
+		fmt.Println("Get:", query, args)
+	}
 	err := db.QueryRowContext(c, query, args...).Scan(obj.Fields()...)
 	return obj, err
 }
@@ -114,6 +135,9 @@ func GetWhere[T Model](c context.Context, db *sql.DB, obj T, wvs []*WhereValue) 
 	selector = whereBuild(obj, selector, wvs)
 	selector.Limit(1)
 	query, args := selector.Query()
+	if Level == Debug {
+		fmt.Println("GetWhere:", query, args)
+	}
 	err := db.QueryRowContext(c, query, args...).Scan(obj.Fields()...)
 	return obj, err
 }
@@ -121,6 +145,9 @@ func GetWhere[T Model](c context.Context, db *sql.DB, obj T, wvs []*WhereValue) 
 // First the first record ordered by id asc
 func First[T Model](c context.Context, db *sql.DB, obj T) (T, error) {
 	query, args := sqlBuilder().Select(obj.Columns()...).From(entsql.Table(obj.Table())).OrderBy(entsql.Asc(AutoIncrementId)).Limit(1).Query()
+	if Level == Debug {
+		fmt.Println("First:", query, args)
+	}
 	err := db.QueryRowContext(c, query, args...).Scan(obj.Fields()...)
 	return obj, err
 }
@@ -128,6 +155,9 @@ func First[T Model](c context.Context, db *sql.DB, obj T) (T, error) {
 // Last  record, ordered by id desc
 func Last[T Model](c context.Context, db *sql.DB, obj T) (T, error) {
 	query, args := sqlBuilder().Select(obj.Columns()...).From(entsql.Table(obj.Table())).OrderBy(entsql.Desc(AutoIncrementId)).Limit(1).Query()
+	if Level == Debug {
+		fmt.Println("Last:", query, args)
+	}
 	err := db.QueryRowContext(c, query, args...).Scan(obj.Fields()...)
 	return obj, err
 }
@@ -138,6 +168,9 @@ func Find[T Model](c context.Context, db *sql.DB, obj T, wvs []*WhereValue, f fu
 		Where: wvs,
 	}
 	query, args := buildFind(obj, req, SqlFind)
+	if Level == Debug {
+		fmt.Println("Find:", query, args)
+	}
 	rows, err := db.QueryContext(c, query, args...)
 	if err != nil {
 		return
@@ -158,6 +191,9 @@ func Find[T Model](c context.Context, db *sql.DB, obj T, wvs []*WhereValue, f fu
 func PageFind[T Model](c context.Context, db *sql.DB, obj T, req *Request, f func() T) (objs []T, err error) {
 	objs = []T{}
 	query, args := buildFind(obj, req, SqlPageList)
+	if Level == Debug {
+		fmt.Println("PageFind:", query, args)
+	}
 	rows, err := db.QueryContext(c, query, args...)
 	if err != nil {
 		return
@@ -178,6 +214,9 @@ func PageFind[T Model](c context.Context, db *sql.DB, obj T, req *Request, f fun
 func PageTotal[T Model](c context.Context, db *sql.DB, obj T, req *Request) (total int, err error) {
 	total = 0
 	query, args := buildFind(obj, req, SqlPageCount)
+	if Level == Debug {
+		fmt.Println("PageTotal:", query, args)
+	}
 	err = db.QueryRowContext(c, query, args...).Scan(&total)
 	return
 }
