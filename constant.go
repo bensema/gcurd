@@ -1,14 +1,5 @@
 package gcurd
 
-type level int
-
-const (
-	Debug Op = iota
-	Info
-)
-
-var Level = Info
-
 type Op int
 
 const (

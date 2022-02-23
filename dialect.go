@@ -12,6 +12,15 @@ const (
 	Gremlin  = dialect.Gremlin
 )
 
+type level int
+
+const (
+	Debug level = iota
+	Info
+)
+
+var Level = Info
+
 var Dialect = MySQL
 
 func sqlBuilder() *entsql.DialectBuilder {
